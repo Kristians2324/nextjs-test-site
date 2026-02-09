@@ -2,20 +2,22 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Default Light Mode colors */
+/* Force light mode by default */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #ffffff !important;
+  --foreground: #171717 !important;
 }
 
-/* Colors when the 'dark' class is active */
+/* Force dark mode only when the 'dark' class is present */
 .dark {
-  --background: #0a0a0a;
-  --foreground: #ededed;
+  --background: #0a0a0a !important;
+  --foreground: #ededed !important;
 }
 
 body {
-  color: var(--foreground);
-  background: var(--background);
-  transition: background-color 0.3s ease, color 0.3s ease;
+  color: var(--foreground) !important;
+  background: var(--background) !important;
+  transition: background 0.3s ease, color 0.3s ease;
+  margin: 0;
+  padding: 0;
 }
