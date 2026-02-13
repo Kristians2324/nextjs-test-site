@@ -9,8 +9,8 @@ const inter = Inter({
   subsets: ["latin"],
 });
 
-const jetbrains = JetBrains_Mono({
-  variable: "--font-jetbrains",
+const jetbrains_mono = JetBrains_Mono({
+  variable: "--font-jetbrains-mono",
   subsets: ["latin"],
 });
 
@@ -28,29 +28,29 @@ export default function RootLayout({
     <html lang="en">
       <head>
         <style>{`
-          nav a { 
-            margin-right: 40px !important; 
-            text-decoration: none !important; 
-            font-family: var(--font-jetbrains), monospace;
+          nav a {
+            margin-right: 40px !important;
+            text-decoration: none !important;
+            font-family: var(--font-jetbrains-mono), monospace;
           }
           nav a:last-child { margin-right: 0 !important; }
           /* This forces the headers/welcome text to look distinct */
-          h1 { 
-            font-family: var(--font-jetbrains), monospace; 
+          h1 {
+            font-family: var(--font-jetbrains-mono), monospace;
             letter-spacing: -0.05em;
             font-weight: 800;
           }
         `}</style>
       </head>
-      {/* THE FIX: bg-white dark:bg-[#0a0a0a] handles the background color shift */}
-      <body className={`${inter.variable} ${jetbrains.variable} antialiased min-h-screen transition-colors duration-500 bg-white dark:bg-[#0a0a0a] text-black dark:text-white font-sans`}>
+      <body className={`${inter.variable} ${jetbrains_mono.variable} antialiased min-h-screen transition-colors duration-500 bg-white dark:bg-[#0a0a0a] text-black dark:text-white font-sans`}>
         
         <header className="sticky top-0 z-50 flex items-center justify-between p-6 border-b border-gray-200/50 dark:border-zinc-800/50 backdrop-blur-md bg-white/70 dark:bg-[#0a0a0a]/70">
           <nav className="flex items-center">
-            <Link href="/" className="hover:text-blue-500 !text-current font-bold uppercase tracking-widest text-sm transition-all">Home</Link>
-            <Link href="/about" className="hover:text-blue-500 !text-current font-bold uppercase tracking-widest text-sm transition-all">About</Link>
-            <Link href="/projects" className="hover:text-blue-500 !text-current font-bold uppercase tracking-widest text-sm transition-all">Projects</Link>
-            <Link href="/contact" className="hover:text-blue-500 !text-current font-bold uppercase tracking-widest text-sm transition-all">Contact</Link>
+            {/* I fixed 'itext-current' to 'text-current' so it stops being purple */}
+            <Link href="/" className="hover:text-blue-500 text-current font-bold uppercase tracking-widest text-sm transition-all">Home</Link>
+            <Link href="/about" className="hover:text-blue-500 text-current font-bold uppercase tracking-widest text-sm transition-all">About</Link>
+            <Link href="/projects" className="hover:text-blue-500 text-current font-bold uppercase tracking-widest text-sm transition-all">Projects</Link>
+            <Link href="/rick-and-morty" className="hover:text-blue-500 text-current font-bold uppercase tracking-widest text-sm transition-all">Rick & Morty</Link>
           </nav>
           
           <ThemeToggle />
@@ -60,7 +60,7 @@ export default function RootLayout({
           {children}
         </main>
 
-        <footer className="p-12 border-t border-gray-200 dark:border-zinc-800 text-center text-xs opacity-40 font-mono">
+        <footer className="p-12 border-t border-gray-200 dark:border-zinc-800 text-center text-xs opacity-60 font-mono">
           © 2026 STUDENT_PORTFOLIO
         </footer>
       </body>
