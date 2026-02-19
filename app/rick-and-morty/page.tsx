@@ -2,45 +2,111 @@
 import { useState, useEffect } from "react";
 import CharacterCard from "../../components/CharacterCard";
 
+// Cookie Helpers
+const setCookie = (name: string, value: string, days = 7) => {
+  const date = new Date();
+  date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
+  const expires = "; expires=" + date.toUTCString();
+  document.cookie = name + "=" + (value || "") + expires + "; path=/; SameSite=Lax";
+};
+
+const getCookie = (name: string) => {
+  const nameEQ = name + "=";
+  const ca = document.cookie.split(';');
+  for (let i = 0; i < ca.length; i++) {
+    let c = ca[i];
+    while (c.charAt(0) === ' ') c = c.substring(1, c.length);
+    if (c.indexOf(nameEQ) === 0) return c.substring(nameEQ.length, c.length);
+  }
+  return null;
+};
+
+const deleteCookie = (name: string) => {
+  setCookie(name, "", -1);
+};
+
+interface Character {
+  id: number;
+  name: string;
+  status: string;
+  species: string;
+  gender: string;
+  image: string;
+  location: { name: string };
+  origin: { name: string };
+  episode: string[];
+  episodes: Array<{
+    name: string;
+    air_date: string;
+  }>;
+}
+
 export default function RickAndMortyApp() {
   const [username, setUsername] = useState("");
   const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [characters, setCharacters] = useState<any[]>([]);
+  const [characters, setCharacters] = useState<Character[]>([]);
   const [favorites, setFavorites] = useState<number[]>([]);
   const [showOnlyFavs, setShowOnlyFavs] = useState(false);
   const [expandedCardId, setExpandedCardId] = useState<number | null>(null);
 
   // Requirement 0: Session preservation
   useEffect(() => {
-    const savedUser = localStorage.getItem("rm_user_session");
+    const savedUser = getCookie("rm_user_session");
     if (savedUser) {
       setUsername(savedUser);
       setIsLoggedIn(true);
-      const savedFavs = localStorage.getItem(`favs_${savedUser}`);
-      if (savedFavs) setFavorites(JSON.parse(savedFavs));
+      const savedFavs = getCookie(`favs_${savedUser}`);
+      if (savedFavs) {
+        try {
+          setFavorites(JSON.parse(savedFavs));
+        } catch (e) {
+          console.error("Failed to parse favorites cookie", e);
+        }
+      }
     }
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Only runs on mount
 
-  // Fetch from OUR internal API, not the public one (Requirement 5)
+  // Requirement 5: Fetch from OUR internal GRAPHQL API
   useEffect(() => {
     if (isLoggedIn) {
-      fetch('/api/characters')
+      fetch('/api/graphql', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          query: '{ characters { id name status species gender image location { name } origin { name } episodes { name air_date } } }'
+        })
+      })
         .then(res => res.json())
-        .then(data => setCharacters(Array.isArray(data) ? data : []))
-        .catch(() => setCharacters([]));
+        .then(resData => {
+          const fetchedCharacters = resData.data?.characters;
+          setCharacters(Array.isArray(fetchedCharacters) ? fetchedCharacters : []);
+        })
+        .catch((err) => {
+          console.error("GraphQL Fetch Error:", err);
+          setCharacters([]);
+        });
     }
   }, [isLoggedIn]);
 
   const handleLogin = () => {
     if (!username.trim()) return;
-    localStorage.setItem("rm_user_session", username);
-    const savedFavs = localStorage.getItem(`favs_${username}`);
-    setFavorites(savedFavs ? JSON.parse(savedFavs) : []);
+    setCookie("rm_user_session", username);
+    const savedFavs = getCookie(`favs_${username}`);
+    if (savedFavs) {
+      try {
+        setFavorites(JSON.parse(savedFavs));
+      } catch (e) {
+        setFavorites([]);
+      }
+    } else {
+      setFavorites([]);
+    }
     setIsLoggedIn(true);
   };
 
   const handleLogout = () => {
-    localStorage.removeItem("rm_user_session");
+    deleteCookie("rm_user_session");
     setIsLoggedIn(false);
     setUsername("");
   };
@@ -48,7 +114,7 @@ export default function RickAndMortyApp() {
   const toggleFav = (id: number) => {
     const next = favorites.includes(id) ? favorites.filter(f => f !== id) : [...favorites, id];
     setFavorites(next);
-    localStorage.setItem(`favs_${username}`, JSON.stringify(next));
+    setCookie(`favs_${username}`, JSON.stringify(next));
   };
 
   if (!isLoggedIn) {
@@ -63,7 +129,7 @@ export default function RickAndMortyApp() {
     );
   }
 
-  const listToDisplay = showOnlyFavs ? characters.filter((c: any) => favorites.includes(c.id)) : characters;
+  const listToDisplay = showOnlyFavs ? characters.filter((c: Character) => favorites.includes(c.id)) : characters;
 
   return (
     <main className="min-h-screen bg-zinc-100 p-6 font-mono text-black">
@@ -80,11 +146,11 @@ export default function RickAndMortyApp() {
 
         {listToDisplay.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            {listToDisplay.map((char: any) => (
-              <CharacterCard 
-                key={char.id} 
-                char={char} 
-                isFavorite={favorites.includes(char.id)} 
+            {listToDisplay.map((char: Character) => (
+              <CharacterCard
+                key={char.id}
+                char={char}
+                isFavorite={favorites.includes(char.id)}
                 toggleFav={toggleFav}
                 isExpanded={expandedCardId === char.id}
                 onExpand={() => setExpandedCardId(expandedCardId === char.id ? null : char.id)}
